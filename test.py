@@ -11,7 +11,10 @@ test_font = pygame.font.Font('assets/font/Pixeltype.ttf', 50)
 
 sky_surface = pygame.image.load('assets/graphics/Sky.png').convert()
 ground_surface = pygame.image.load('assets/graphics/ground.png').convert()
-text_surface = test_font.render('My game', False, 'Black')
+
+score_surf = test_font.render('My game', False, (64,64,64))
+score_rect = score_surf.get_rect(center = (400, 50))
+
 snail_surf = pygame.image.load('assets/graphics/snail/snail1.png').convert_alpha()
 snail_rect = snail_surf.get_rect(bottomright = (600, 300))
 
@@ -23,34 +26,24 @@ while True:
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			exit()
-		# if event.type == pygame.MOUSEMOTION:
-		# 	print(event.pos)
-		# if event.type == pygame.MOUSEBUTTONDOWN:
-		# 	print('mouse button down')
-		# if event.type == pygame.MOUSEBUTTONUP:
-		# 	print('mouse button up')
-		# if event.type == pygame.MOUSEMOTION:
-		# 	if player_rect.collidepoint(event.pos): print('collision!')
 
 	screen.blit(sky_surface, (0, 0))
 	screen.blit(ground_surface, (0, 300))
-	screen.blit(text_surface, (300, 50))
+
+	# 근데 rect 마진을 위해서 이렇게 두번 호출해야 하는게.... 맞는거야?
+	pygame.draw.rect(screen, '#c0e8ec', score_rect)
+	pygame.draw.rect(screen, '#c0e8ec', score_rect, 20)
+	# pygame.draw.line(screen, 'Gold', (0,0), (800, 400), 10)
+	# pygame.draw.line(screen, 'Gold', (0,0), pygame.mouse.get_pos(), 10)
+	# pygame.draw.ellipse(screen, 'Brown', pygame.Rect(50, 200, 100, 100))
+
+	screen.blit(score_surf, score_rect)
+	
 	snail_rect.x -= 4
 	if (snail_rect.right <= 0):
 		snail_rect.left = 800
 	screen.blit(snail_surf, snail_rect)
 	screen.blit(player_surf, player_rect)
-
-	# print(player_rect.colliderect(snail_rect))
-	# if player_rect.colliderect(snail_rect):
-	# 	print("collision!")
-
-	# mouse_pos = pygame.mouse.get_pos()
-	# if player_rect.collidepoint(mouse_pos):
-	# 	print("collision!")
-	# else:
-	# 	print("nothing happened!")
-
 
 	pygame.display.update()
 	clock.tick(60)
