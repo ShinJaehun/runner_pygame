@@ -9,6 +9,8 @@ pygame.display.set_caption('Runner')
 clock = pygame.time.Clock()
 test_font = pygame.font.Font('assets/font/Pixeltype.ttf', 50)
 
+game_active = True
+
 sky_surface = pygame.image.load('assets/graphics/Sky.png').convert()
 ground_surface = pygame.image.load('assets/graphics/ground.png').convert()
 
@@ -20,30 +22,56 @@ snail_rect = snail_surf.get_rect(bottomright = (600, 300))
 
 player_surf = pygame.image.load('assets/graphics/Player/player_walk_1.png').convert_alpha()
 player_rect = player_surf.get_rect(midbottom = (80, 300))
+player_gravity = 0
 
 while True:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			exit()
+		if game_active:
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				if player_rect.collidepoint(event.pos): 
+					player_gravity = -20
+			if event.type == pygame.KEYDOWN:
+				# print('key down')
+				if event.key == pygame.K_SPACE and player_rect.bottom >= 300:
+					player_gravity = -20
+		else:
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE :
+				game_active = True
+				snail_rect.left = 800
 
-	screen.blit(sky_surface, (0, 0))
-	screen.blit(ground_surface, (0, 300))
+	if game_active:
+		screen.blit(sky_surface, (0, 0))
+		screen.blit(ground_surface, (0, 300))
 
-	# 근데 rect 마진을 위해서 이렇게 두번 호출해야 하는게.... 맞는거야?
-	pygame.draw.rect(screen, '#c0e8ec', score_rect)
-	pygame.draw.rect(screen, '#c0e8ec', score_rect, 20)
-	# pygame.draw.line(screen, 'Gold', (0,0), (800, 400), 10)
-	# pygame.draw.line(screen, 'Gold', (0,0), pygame.mouse.get_pos(), 10)
-	# pygame.draw.ellipse(screen, 'Brown', pygame.Rect(50, 200, 100, 100))
+		pygame.draw.rect(screen, '#c0e8ec', score_rect)
+		pygame.draw.rect(screen, '#c0e8ec', score_rect, 20)
 
-	screen.blit(score_surf, score_rect)
-	
-	snail_rect.x -= 4
-	if (snail_rect.right <= 0):
-		snail_rect.left = 800
-	screen.blit(snail_surf, snail_rect)
-	screen.blit(player_surf, player_rect)
+		screen.blit(score_surf, score_rect)
+		
+		snail_rect.x -= 4
+		if (snail_rect.right <= 0): snail_rect.left = 800
+		screen.blit(snail_surf, snail_rect)
+
+		# player
+		player_gravity += 1
+		player_rect.y += player_gravity
+		if player_rect.bottom >= 300: player_rect.bottom = 300
+		screen.blit(player_surf, player_rect)
+
+		# keys = pygame.key.get_pressed()
+		# if keys[pygame.K_SPACE]:
+		# 	print('jump')
+
+		# collision
+		if snail_rect.colliderect(player_rect):
+			game_active = False
+	else:
+		screen.fill('yellow')
+		# pygame.quit()
+		# exit()
 
 	pygame.display.update()
 	clock.tick(60)
