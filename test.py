@@ -14,14 +14,11 @@ def obstacle_movement(obstacle_list):
 	if obstacle_list:
 		for obstacle_rect in obstacle_list:
 			obstacle_rect.x -= 5
-			# screen.blit(snail_surf, obstacle_rect)
-			# 근데 이런 식으로 검사하기 보다 어떤 스위치를 만들어서 넘기는게 낫지 않나?
 			if obstacle_rect.bottom == 300:
 				screen.blit(snail_surf, obstacle_rect)
 			else:
 				screen.blit(fly_surf, obstacle_rect)
-		obstacle_list = [obstacle for obstacle in obstacle_list if obstacle.x > -100] # 이걸로 화면을 벗어나는 오브젝트 삭제
-		# print(obstacle_list)
+		obstacle_list = [obstacle for obstacle in obstacle_list if obstacle.x > -100]
 		return obstacle_list
 	else: return []
 
@@ -31,6 +28,19 @@ def collision(player, obstacles):
 			if player.colliderect(obstacle_rect):
 				return False
 	return True
+
+def player_animation():
+	global player_surf, player_index
+	# 이것도 이런 식으로 정의하는게 좀 그런데....
+	if player_rect.bottom < 300:
+		player_surf = player_jump
+	else:
+		# 프레임에 따라서 0.1씩 주다가 1이 되면 다음 애니메이션으로 넘어가는건가?
+		# 정확히 알려면 player_index 값을 print해보면 된다.
+		print(player_index)
+		player_index += 0.1 
+		if player_index >= len(player_walk): player_index = 0
+		player_surf = player_walk[int(player_index)]
 
 pygame.init()
 
@@ -47,14 +57,27 @@ sky_surface = pygame.image.load('assets/graphics/Sky.png').convert()
 ground_surface = pygame.image.load('assets/graphics/ground.png').convert()
 
 # obstacles
-snail_surf = pygame.image.load('assets/graphics/snail/snail1.png').convert_alpha()
-# snail_rect = snail_surf.get_rect(bottomright = (600, 300))
-fly_surf = pygame.image.load('assets/graphics/Fly/Fly1.png').convert_alpha()
+snail_frame_1 = pygame.image.load('assets/graphics/snail/snail1.png').convert_alpha()
+snail_frame_2 = pygame.image.load('assets/graphics/snail/snail2.png').convert_alpha()
+snail_frames = [snail_frame_1, snail_frame_2]
+snail_frame_index = 0
+snail_surf = snail_frames[snail_frame_index]
+fly_frame1 = pygame.image.load('assets/graphics/Fly/Fly1.png').convert_alpha()
+fly_frame2 = pygame.image.load('assets/graphics/Fly/Fly2.png').convert_alpha()
+fly_frames = [fly_frame1, fly_frame2]
+fly_frame_index = 0
+fly_surf = fly_frames[fly_frame_index]
 
 obstacle_rect_list = []
 
-player_surf = pygame.image.load('assets/graphics/Player/player_walk_1.png').convert_alpha()
+player_walk1 = pygame.image.load('assets/graphics/Player/player_walk_1.png').convert_alpha()
+player_walk2 = pygame.image.load('assets/graphics/Player/player_walk_2.png').convert_alpha()
+player_walk = [player_walk1, player_walk2]
+player_index = 0
+player_jump = pygame.image.load('assets/graphics/Player/jump.png').convert_alpha()
+player_surf = player_walk[player_index]
 player_rect = player_surf.get_rect(midbottom = (80, 300))
+
 player_gravity = 0
 
 # intro screen
@@ -70,7 +93,14 @@ game_message_rect = game_message.get_rect(center = (400, 320))
 
 # timer
 obstacle_timer = pygame.USEREVENT + 1
+# set_timer 뒤에 숫자는 ms를 의미하는가?
 pygame.time.set_timer(obstacle_timer, 1500)
+
+snail_animation_timer = pygame.USEREVENT + 2
+pygame.time.set_timer(snail_animation_timer, 500)
+
+fly_animation_timer = pygame.USEREVENT + 3
+pygame.time.set_timer(fly_animation_timer, 200)
 
 while True:
 	for event in pygame.event.get():
@@ -88,15 +118,23 @@ while True:
 		else:
 			if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE :
 				game_active = True
-				# snail_rect.left = 800
 				start_time = int(pygame.time.get_ticks() / 1000)
 
-		if event.type == obstacle_timer and game_active:
-			# obstacle_rect_list.append(snail_surf.get_rect(bottomright = (randint(900, 1100), 300)))
-			if randint(0, 2):
-				obstacle_rect_list.append(snail_surf.get_rect(bottomright = (randint(900, 1100), 300)))
-			else:
-				obstacle_rect_list.append(fly_surf.get_rect(bottomright = (randint(900, 1100), 210)))
+		if game_active:
+			if event.type == obstacle_timer:
+				if randint(0, 2):
+					obstacle_rect_list.append(snail_surf.get_rect(bottomright = (randint(900, 1100), 300)))
+				else:
+					obstacle_rect_list.append(fly_surf.get_rect(bottomright = (randint(900, 1100), 210)))
+
+			if event.type == snail_animation_timer:
+				if snail_frame_index == 0: snail_frame_index = 1
+				else: snail_frame_index = 0
+				snail_surf = snail_frames[snail_frame_index]
+			if event.type == fly_animation_timer:
+				if fly_frame_index == 0: fly_frame_index = 1
+				else: fly_frame_index = 0
+				fly_surf = fly_frames[fly_frame_index]
 
 	if game_active:
 		screen.blit(sky_surface, (0, 0))
@@ -104,22 +142,17 @@ while True:
 
 		score = display_score()
 
-		# snail_rect.x -= 4
-		# if (snail_rect.right <= 0): snail_rect.left = 800
-		# screen.blit(snail_surf, snail_rect)
-
 		# player
 		player_gravity += 1
 		player_rect.y += player_gravity
 		if player_rect.bottom >= 300: player_rect.bottom = 300
 		screen.blit(player_surf, player_rect)
+		player_animation()
 
 		# obstacle movement
 		obstacle_rect_list = obstacle_movement(obstacle_rect_list)
 
 		# collision
-		# if snail_rect.colliderect(player_rect):
-		# 	game_active = False
 		game_active = collision(player_rect, obstacle_rect_list)
 	else:
 		screen.fill((94, 129, 162))
