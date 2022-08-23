@@ -14,10 +14,13 @@ class Player(pygame.sprite.Sprite):
 		self.image = self.player_walk[self.player_index]
 		self.rect = self.image.get_rect(midbottom = (80, 300))
 		self.gravity = 0
+		self.jump_sound = pygame.mixer.Sound('assets/audio/jump.mp3')
+		self.jump_sound.set_volume(0.5)
 	def player_input(self):
 		keys = pygame.key.get_pressed()
 		if keys[pygame.K_SPACE] and self.rect.bottom >= 300:
 			self.gravity = -20
+			self.jump_sound.play()
 	def apply_gravity(self):
 		self.gravity += 1
 		self.rect.y += self.gravity
@@ -118,6 +121,10 @@ game_active = False
 start_time = 0
 score = 0
 
+bg_music = pygame.mixer.Sound('assets/audio/music.wav')
+bg_music.set_volume(0.5)
+bg_music.play(loops = -1)
+
 # groups
 player = pygame.sprite.GroupSingle()
 player.add(Player())
@@ -164,7 +171,6 @@ game_message_rect = game_message.get_rect(center = (400, 320))
 
 # timer
 obstacle_timer = pygame.USEREVENT + 1
-# set_timer 뒤에 숫자는 ms를 의미하는가?
 pygame.time.set_timer(obstacle_timer, 1500)
 
 # 이건 좀 아쉬운데 강사 선생님이 refactoring하면서 각 obstacle의 timer를 어떻게 적용하는지 설명 안해주셨다.
